@@ -1,0 +1,21 @@
+{
+  "name": "stepoffaith",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24.11"
+  },
+  "scripts": {
+    "dev:db": "docker compose -f infra/docker-compose.dev.yml up -d",
+    "dev:api": "pnpm --filter @sof/server dev:api",
+    "dev:bot": "pnpm --filter @sof/server dev:bot",
+    "dev:miniapp": "pnpm --filter @sof/miniapp dev",
+    "dev:admin": "pnpm --filter @sof/admin dev",
+    "db:generate": "pnpm --filter @sof/server db:generate",
+    "db:migrate": "pnpm --filter @sof/server db:migrate",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build"
+  }
+}

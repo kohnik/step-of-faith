@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "awaiting_contact_until" timestamp with time zone;

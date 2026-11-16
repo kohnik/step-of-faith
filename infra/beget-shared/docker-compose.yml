@@ -1,0 +1,106 @@
+# Тестовый деплой на общий VPS Beget, где уже работают другие боты.
+# Порты 80/443 держит общий Caddy (проект dolgov-net): мы встаём за ним через /opt/caddy-sites.
+# Все имена сервисов с префиксом sof- - они видны в общей сети dolgov-net_default.
+# Образы sof-server и sof-backup собираются на Mac (infra/beget-shared/deploy.sh), на сервере сборки нет.
+name: stepoffaith
+
+x-server: &server
+  image: sof-server:latest
+  restart: unless-stopped
+  # Бот и очередь задач при остановке ждут до 15 с, пока доделаются задачи; по умолчанию Docker даёт 10 с.
+  stop_grace_period: 30s
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: postgres://sof:${POSTGRES_PASSWORD}@sof-db:5432/sof
+    HOST: 0.0.0.0
+    PORT: '3000'
+    NODE_OPTIONS: --max-old-space-size=180
+    # API и бот по 10 + pg-boss 2+4 = 26 соединений при max_connections=40.
+    DB_POOL_MAX: '10'
+  depends_on:
+    sof-db:
+      condition: service_healthy
+  mem_limit: 320m
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '3' }
+
+services:
+  sof-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sof
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: sof
+    command: ['postgres', '-c', 'max_connections=40', '-c', 'shared_buffers=48MB', '-c', 'work_mem=4MB', '-c', 'maintenance_work_mem=32MB']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sof']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    mem_limit: 200m
+
+  sof-api:
+    <<: *server
+    command: ['node', 'dist/main-api.js']
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/health']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  sof-bot:
+    <<: *server
+    command: ['node', 'dist/main-bot.js']
+    depends_on:
+      sof-api:
+        condition: service_healthy
+
+  # Статика Mini App и админки + проксирование /api. Только он подключён к общей сети Caddy.
+  sof-web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv:ro
+    networks: [default, edge]
+    # Каждый открытый поток живых обновлений (/api/events) - ~90 КБ в Caddy: при 64 МБ он падал на ~600 открытых приложениях.
+    mem_limit: 256m
+    depends_on:
+      sof-api:
+        condition: service_healthy
+
+  sof-backup:
+    image: sof-backup:latest
+    restart: unless-stopped
+    environment:
+      PGHOST: sof-db
+      PGUSER: sof
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: sof
+      BACKUP_INTERVAL_MINUTES: ${BACKUP_INTERVAL_MINUTES:-60}
+      BACKUP_KEEP_LOCAL: '72'
+      S3_BUCKET: ${S3_BUCKET:-}
+      RCLONE_CONFIG_S3_TYPE: s3
+      RCLONE_CONFIG_S3_PROVIDER: Other
+      RCLONE_CONFIG_S3_ENDPOINT: ${S3_ENDPOINT:-https://s3.ru1.storage.beget.cloud}
+      RCLONE_CONFIG_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    volumes:
+      - ./backups:/backups
+    mem_limit: 64m
+    depends_on:
+      sof-db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+
+networks:
+  edge:
+    external: true
+    name: dolgov-net_default

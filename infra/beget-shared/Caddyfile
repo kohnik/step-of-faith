@@ -1,0 +1,68 @@
+# Внутренний Caddy проекта: только HTTP, TLS делает общий Caddy снаружи.
+{
+	auto_https off
+	admin off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+(api) {
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	# Поток живых обновлений Mini App: отдаём сразу, без буфера.
+	handle /api/events {
+		reverse_proxy sof-api:3000 {
+			flush_interval -1
+		}
+	}
+	handle /api/* {
+		reverse_proxy sof-api:3000
+	}
+}
+
+# Mini App, веб-билеты, браузерный сканер
+:8080 {
+	import api
+	handle /assets/* {
+		# Файлы с хешем в имени: кэш навсегда. Нет файла (старый чанк после выкладки) - честный 404,
+		# а не index.html под видом скрипта, который браузер и service worker закэшировали бы на год.
+		root * /srv/miniapp
+		@exists file
+		header @exists Cache-Control "public, max-age=31536000, immutable"
+		@missing not file
+		header @missing Cache-Control "no-store"
+		file_server
+	}
+	handle {
+		root * /srv/miniapp
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Веб-админка
+:8081 {
+	import api
+	header X-Frame-Options "DENY"
+	handle /assets/* {
+		# Файлы с хешем в имени: кэш навсегда. Нет файла (старый чанк после выкладки) - честный 404,
+		# а не index.html под видом скрипта, который браузер и service worker закэшировали бы на год.
+		root * /srv/admin
+		@exists file
+		header @exists Cache-Control "public, max-age=31536000, immutable"
+		@missing not file
+		header @missing Cache-Control "no-store"
+		file_server
+	}
+	handle {
+		root * /srv/admin
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

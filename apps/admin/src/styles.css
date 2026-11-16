@@ -1,0 +1,517 @@
+/* ---------- каркас ---------- */
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.sof-main {
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
+  min-height: 100dvh;
+}
+
+.sof-brand-mark {
+  width: rem(34px);
+  height: rem(34px);
+  border-radius: rem(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mantine-color-white);
+  background: linear-gradient(135deg, var(--mantine-color-indigo-6), var(--mantine-color-cyan-6));
+  box-shadow: 0 rem(4px) rem(12px) rgba(76, 110, 245, 0.35);
+  flex-shrink: 0;
+}
+
+.sof-nav-section {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mantine-color-dimmed);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm) rem(4px);
+}
+
+.sof-nav-link {
+  border-radius: var(--mantine-radius-md);
+  margin-bottom: rem(2px);
+}
+
+.sof-page {
+  max-width: rem(1600px);
+  margin: 0 auto;
+}
+
+/* ---------- телефон: без автозума iOS ----------
+   iOS увеличивает страницу при фокусе на поле со шрифтом меньше 16px и не всегда
+   возвращает масштаб обратно. На телефоне все поля - 16px. */
+
+@media (max-width: $mantine-breakpoint-sm) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select,
+  .mantine-Input-input,
+  .mantine-PillsInputField-field,
+  .ag-theme-quartz input,
+  .ag-root-wrapper input,
+  .ag-popup input {
+    font-size: 16px !important;
+  }
+}
+
+/* ---------- модалки (AppModal) ---------- */
+
+/* Кнопки прилипают к низу окна: содержимое прокручивается над ними. */
+.sof-modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-inline: calc(var(--mantine-spacing-md) * -1);
+  margin-bottom: calc(var(--mantine-spacing-md) * -1);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  padding-bottom: calc(var(--mantine-spacing-sm) + env(safe-area-inset-bottom, 0px));
+  background-color: var(--mantine-color-body);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+@media (max-width: $mantine-breakpoint-sm) {
+  /* Во весь экран: содержимое растягивается на высоту экрана, кнопки - у нижнего края. */
+  .mantine-Modal-content[data-full-screen] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mantine-Modal-content[data-full-screen] > .mantine-Modal-body,
+  .mantine-Modal-content[data-full-screen] > .mantine-Modal-body > form {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mantine-Modal-content[data-full-screen] > .mantine-Modal-body > .mantine-Stack-root,
+  .mantine-Modal-content[data-full-screen] > .mantine-Modal-body > form > .mantine-Stack-root {
+    flex: 1 0 auto;
+  }
+
+  .mantine-Modal-content[data-full-screen] .sof-modal-actions {
+    margin-top: auto;
+  }
+
+  .sof-modal-actions .mantine-Group-root > .mantine-Button-root {
+    flex: 1 1 auto;
+  }
+}
+
+/* Поле на две колонки в сетке - только на широком экране (на телефоне сетка в одну колонку). */
+@media (min-width: $mantine-breakpoint-sm) {
+  .sof-span-2 {
+    grid-column: span 2;
+  }
+}
+
+/* ---------- карточки статистики ---------- */
+
+.sof-stat-icon {
+  width: rem(42px);
+  height: rem(42px);
+}
+
+.sof-stat-value {
+  font-size: rem(28px);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sof-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.sof-mono {
+  font-family: var(--mantine-font-family-monospace);
+  letter-spacing: 0.02em;
+}
+
+.sof-clickable {
+  cursor: pointer;
+}
+
+.sof-row-link {
+  cursor: pointer;
+}
+
+.sof-row-link:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+/* ---------- AG Grid ---------- */
+
+.sof-grid {
+  width: 100%;
+}
+
+.sof-grid .ag-row.sof-row-cancelled {
+  opacity: 0.55;
+}
+
+.sof-grid.sof-grid-clickable .ag-row {
+  cursor: pointer;
+}
+
+.sof-grid .ag-cell .mantine-Badge-root {
+  vertical-align: middle;
+}
+
+/* Свои рендеры ячеек: строчный flex, чтобы стоять по центру строки, как обычный текст. */
+.sof-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(6px);
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+  line-height: 1.35;
+}
+
+.sof-cell > * {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.sof-cell > svg,
+.sof-cell > .mantine-Badge-root {
+  flex-shrink: 0;
+}
+
+.sof-grid .sof-cell-strike {
+  text-decoration: line-through;
+}
+
+/* Колонка «Подтверждён»: значок по центру, от галочек выбора и ФИО отделена тонкими линиями. */
+.sof-grid .sof-col-confirmed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0;
+  border-inline: 1px solid var(--ag-row-border-color, var(--ag-border-color));
+}
+
+.sof-confirmed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: rem(22px);
+  height: rem(22px);
+  border-radius: 50%;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-1));
+  background: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+}
+
+.sof-confirmed[data-on] {
+  color: var(--mantine-color-white);
+  background: var(--mantine-color-green-6);
+}
+
+/* ---------- чеки ---------- */
+
+.sof-receipt-preview {
+  display: block;
+  width: 100%;
+  height: rem(260px);
+  object-fit: contain;
+  border-radius: var(--mantine-radius-md);
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  cursor: zoom-in;
+}
+
+.sof-receipt-full {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* ---------- таймлайн расписания ---------- */
+
+.sof-timeline {
+  position: relative;
+  display: grid;
+  overflow-x: auto;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background-color: var(--mantine-color-body);
+}
+
+.sof-timeline-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: rem(8px) rem(10px);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  border-left: 1px solid var(--mantine-color-default-border);
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Колонка времени и угол шапки остаются на месте при прокрутке вбок. */
+.sof-timeline-times {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background-color: var(--mantine-color-body);
+  box-shadow: 1px 0 0 var(--mantine-color-default-border);
+}
+
+.sof-timeline-head.sof-timeline-corner {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  border-left: none;
+}
+
+.sof-timeline-col {
+  position: relative;
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.sof-timeline-hour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+}
+
+.sof-timeline-label {
+  position: absolute;
+  right: rem(6px);
+  transform: translateY(-50%);
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  font-variant-numeric: tabular-nums;
+}
+
+.sof-timeline-block {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden;
+  padding: rem(4px) rem(6px);
+  border-radius: var(--mantine-radius-sm);
+  border-left: rem(3px) solid var(--block-color);
+  background-color: color-mix(in srgb, var(--block-color) 16%, var(--mantine-color-body));
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.3;
+  cursor: pointer;
+  transition: box-shadow 120ms ease;
+  text-align: left;
+  color: var(--mantine-color-text);
+}
+
+.sof-timeline-block:hover,
+.sof-timeline-block:focus-visible {
+  box-shadow: var(--mantine-shadow-md);
+  z-index: 1;
+  outline: none;
+}
+
+.sof-timeline-block.sof-cancelled {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* Пересечение в одном зале - красная рамка. */
+.sof-timeline-block.sof-clash {
+  box-shadow: inset 0 0 0 2px var(--mantine-color-red-6);
+}
+
+.sof-timeline-cap {
+  font-weight: 400;
+  color: var(--mantine-color-dimmed);
+}
+
+.sof-timeline-block.sof-draft {
+  border-left-style: dashed;
+  background-color: transparent;
+  border: 1px dashed var(--block-color);
+  border-left-width: rem(3px);
+}
+
+.sof-timeline-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--mantine-color-red-6);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---------- Markdown ---------- */
+
+.sof-markdown {
+  word-break: break-word;
+}
+
+.sof-markdown > :first-child {
+  margin-top: 0;
+}
+
+.sof-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.sof-broadcast-preview {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+  padding: rem(10px) rem(14px);
+  border-radius: rem(14px) rem(14px) rem(14px) rem(4px);
+  background-color: light-dark(#ffffff, var(--mantine-color-dark-5));
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+  max-width: rem(460px);
+}
+
+.sof-chat-bg {
+  padding: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-lg);
+  background-color: light-dark(#dfe7ef, var(--mantine-color-dark-7));
+}
+
+/* ---------- JSON-дифф ---------- */
+
+.sof-diff-changed {
+  background-color: light-dark(var(--mantine-color-yellow-0), rgba(250, 176, 5, 0.12));
+}
+
+.sof-diff-json {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ---------- печать карточек волонтёров ---------- */
+
+.sof-print-root {
+  display: none;
+}
+
+.sof-volunteer-card {
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  padding: var(--mantine-spacing-md);
+  background: #ffffff;
+  color: #000000;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.sof-print-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8mm;
+}
+
+/* Список записавшихся к служителю: каждый служитель - на своём листе. */
+.sof-print-page {
+  break-after: page;
+  page-break-after: always;
+}
+
+.sof-print-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+
+.sof-print-title {
+  margin: 0 0 4px;
+  font-size: 20pt;
+}
+
+.sof-print-sub {
+  margin: 0 0 12px;
+  font-size: 12pt;
+}
+
+.sof-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13pt;
+}
+
+.sof-print-table td {
+  border-bottom: 1px solid #999999;
+  padding: 7px 6px;
+}
+
+.sof-print-time {
+  width: 18mm;
+  font-weight: 700;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  /* На время печати остаётся только лист с карточками, остальное скрыто. */
+  body.sof-printing > :not(.sof-print-root) {
+    display: none !important;
+  }
+
+  body.sof-printing > .sof-print-root {
+    display: block !important;
+    color: #000000;
+    background: #ffffff;
+  }
+
+  body.sof-printing .sof-volunteer-card {
+    border: 1px dashed #999999;
+    box-shadow: none;
+  }
+}
+
+/* ---------- новые строки (подтверждённые, участники) ---------- */
+
+@keyframes sof-fresh {
+  from {
+    background-color: light-dark(var(--mantine-color-teal-1), rgba(18, 184, 134, 0.25));
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.sof-fresh {
+  animation: sof-fresh 3s ease-out;
+}
+
+.sof-grid .ag-row.sof-fresh {
+  animation: sof-fresh 3s ease-out;
+}
+
+/* PDF чека в окне просмотра */
+.sof-receipt-pdf {
+  display: block;
+  width: 100%;
+  height: min(75vh, 900px);
+  border: 0;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-white);
+}

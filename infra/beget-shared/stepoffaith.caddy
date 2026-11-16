@@ -1,0 +1,20 @@
+# Сайт Step of Faith в общем Caddy (проект dolgov-net). Копия: infra/beget-shared/stepoffaith.caddy
+sof-app.159.194.205.232.sslip.io {
+	request_body {
+		max_size 2MB
+	}
+	# Поток живых обновлений (/api/events) не сжимаем: сжатие копит байты, и подсказки приходили бы пачкой.
+	@compress not path /api/events
+	encode @compress gzip
+	reverse_proxy sof-web:8080 {
+		flush_interval -1
+	}
+}
+
+sof-admin.159.194.205.232.sslip.io {
+	request_body {
+		max_size 2MB
+	}
+	encode gzip
+	reverse_proxy sof-web:8081
+}

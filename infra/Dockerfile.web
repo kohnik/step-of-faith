@@ -1,0 +1,25 @@
+# syntax=docker/dockerfile:1
+# Caddy + собранные фронтенды: Mini App, админка, лендинг. HTTPS-сертификаты Caddy получает сам.
+FROM node:24-alpine AS build
+RUN corepack enable
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+WORKDIR /repo
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
+COPY apps/server/package.json apps/server/
+COPY packages/shared/package.json packages/shared/
+COPY apps/miniapp/package.json apps/miniapp/
+COPY apps/admin/package.json apps/admin/
+RUN pnpm install --frozen-lockfile --filter @sof/miniapp... --filter @sof/admin...
+COPY packages/shared packages/shared
+COPY apps/miniapp apps/miniapp
+COPY apps/admin apps/admin
+# Имя бота - для ссылок «открыть чат с ботом» в Mini App (передаётся из BOT_USERNAME в docker-compose).
+ARG VITE_BOT_USERNAME
+ENV VITE_BOT_USERNAME=$VITE_BOT_USERNAME
+RUN pnpm --filter @sof/miniapp build && pnpm --filter @sof/admin build
+
+FROM caddy:2-alpine
+COPY infra/Caddyfile /etc/caddy/Caddyfile
+COPY infra/landing /srv/landing
+COPY --from=build /repo/apps/miniapp/dist /srv/miniapp
+COPY --from=build /repo/apps/admin/dist /srv/admin

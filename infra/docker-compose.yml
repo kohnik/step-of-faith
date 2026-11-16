@@ -1,0 +1,146 @@
+# Прод на одном VPS (Beget). Запуск из корня репозитория:
+#   docker compose -f infra/docker-compose.yml --env-file .env up -d --build
+name: stepoffaith
+
+x-server: &server
+  image: sof-server:latest
+  restart: unless-stopped
+  # Бот и очередь задач при остановке ждут до 15 с, пока доделаются задачи; по умолчанию Docker даёт 10 с.
+  stop_grace_period: 30s
+  env_file: ../.env
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: postgres://sof:${POSTGRES_PASSWORD}@postgres:5432/sof
+    HOST: 0.0.0.0
+    PORT: '3000'
+    MEDIA_DIR: /data/media
+    PRIVATE_DIR: /data/private
+  depends_on:
+    postgres:
+      condition: service_healthy
+  logging:
+    driver: json-file
+    options: { max-size: '20m', max-file: '5' }
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sof
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: sof
+    command: ['postgres', '-c', 'max_connections=100', '-c', 'shared_buffers=512MB', '-c', 'effective_cache_size=2GB', '-c', 'wal_compression=on']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sof']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  api:
+    <<: *server
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.server
+    command: ['node', 'dist/main-api.js']
+    # Фото и 3D мерча (их же отдаёт Caddy) и закрытые файлы (чеки за мерч).
+    volumes:
+      - media:/data/media
+      - private:/data/private
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/health']
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  bot:
+    <<: *server
+    command: ['node', 'dist/main-bot.js']
+    # Фоновые задачи (они в процессе бота) читают и пишут те же файлы, что API: картинки из «Сообщений»
+    # уходят участнику отсюда, фото профиля сохраняются сюда же. Без общих томов бот их не видит.
+    volumes:
+      - media:/data/media
+      - private:/data/private
+    depends_on:
+      api:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+      args:
+        VITE_BOT_USERNAME: ${BOT_USERNAME:-}
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?set ADMIN_DOMAIN}
+      # Прежний адрес админки: перекидываем на ADMIN_DOMAIN (admin.stepoffaith.online у части провайдеров не открывается).
+      ADMIN_ALIAS: ${ADMIN_ALIAS:-}
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+      BOT_USERNAME: ${BOT_USERNAME}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      # nocopy: в пустой том не копировать папки образа - владельцем тома остаётся api (пользователь node).
+      - { type: volume, source: media, target: /srv/media, read_only: true, volume: { nocopy: true } }
+    depends_on:
+      api:
+        condition: service_healthy
+
+  backup:
+    build: ./backup
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: sof
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: sof
+      BACKUP_INTERVAL_MINUTES: ${BACKUP_INTERVAL_MINUTES:-60}
+      # Локальные копии на диске сервера: 672 × 15 минут = 7 дней (в S3 - 30 дней).
+      BACKUP_KEEP_LOCAL: ${BACKUP_KEEP_LOCAL:-672}
+      # Копия раз в день (зашифрованная): в Telegram (чаты через запятую) и/или на почту, во сколько и пароль шифрования.
+      TZ: ${BACKUP_TZ:-Europe/Minsk}
+      BACKUP_MAIL_TO: ${BACKUP_MAIL_TO:-}
+      BACKUP_TG_BOT_TOKEN: ${BOT_TOKEN:-}
+      BACKUP_TG_CHAT_IDS: ${BACKUP_TG_CHAT_IDS:-}
+      BACKUP_MAIL_HOUR: ${BACKUP_MAIL_HOUR:-22}
+      # Конференция: копия в Telegram каждый час (без звука, только если база менялась) - до этой даты включительно.
+      # Почасовые копии в Telegram (на время конференции) выключены; включить - дата «до» в .env.
+      BACKUP_TG_HOURLY_UNTIL: ${BACKUP_TG_HOURLY_UNTIL:-}
+      BACKUP_MAIL_PASSWORD: ${BACKUP_MAIL_PASSWORD:-}
+      SMTP_URL: ${SMTP_URL:-smtps://smtp.gmail.com:465}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      RCLONE_CONFIG_S3_TYPE: s3
+      RCLONE_CONFIG_S3_PROVIDER: Other
+      RCLONE_CONFIG_S3_ENDPOINT: ${S3_ENDPOINT:-https://s3.ru1.storage.beget.cloud}
+      RCLONE_CONFIG_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    volumes:
+      - backups:/backups
+      # Фото, модели и чеки мерча - копируются в S3 рядом с дампами. nocopy и запуск после api:
+      # иначе пустой том заполнился бы папками образа (cdrom, usb…) с владельцем root и api не смог бы писать.
+      - { type: volume, source: media, target: /media, read_only: true, volume: { nocopy: true } }
+      - { type: volume, source: private, target: /private, read_only: true, volume: { nocopy: true } }
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+  backups:
+  media:
+  private:

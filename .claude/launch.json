@@ -1,0 +1,54 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin/node",
+      "runtimeArgs": [
+        "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin/corepack",
+        "pnpm",
+        "--filter",
+        "@sof/server",
+        "dev:api"
+      ],
+      "env": {
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "PATH": "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin:/usr/bin:/bin:/usr/local/bin"
+      },
+      "port": 3000
+    },
+    {
+      "name": "miniapp",
+      "runtimeExecutable": "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin/node",
+      "runtimeArgs": [
+        "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin/corepack",
+        "pnpm",
+        "--filter",
+        "@sof/miniapp",
+        "dev"
+      ],
+      "env": {
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "PATH": "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin:/usr/bin:/bin:/usr/local/bin"
+      },
+      "port": 5173
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin/node",
+      "runtimeArgs": [
+        "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin/corepack",
+        "pnpm",
+        "--filter",
+        "@sof/admin",
+        "dev"
+      ],
+      "env": {
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "PATH": "/Users/elizavetaulosevic/.nvm/versions/node/v24.21.0/bin:/usr/bin:/bin:/usr/local/bin",
+        "VITE_BOT_USERNAME": "step_of_faith_2026_bot"
+      },
+      "port": 5174
+    }
+  ]
+}

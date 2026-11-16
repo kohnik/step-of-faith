@@ -1,0 +1,481 @@
+@import 'tailwindcss';
+
+/*
+ * Фирменные цвета «Шаг веры 2026»: красный #D0352C, кремовый #E0DBBE, синий #4B5DA5, сливовый #352937.
+ * Две темы - кремовая «бумага» и тёмная «слива»; какую показать, решает Telegram (data-theme)
+ * или система в браузере. Цвета Telegram (--tg-theme-*) больше не берём - у приложения свой стиль.
+ * Критичные цвета (экран результата сканера) - обычные hex без oklch/color-mix,
+ * чтобы корректно показываться и на старых телефонах волонтёров.
+ */
+:root {
+  color-scheme: light;
+  --app-bg: #ece7d2;
+  --app-section: #f7f4e8;
+  --app-text: #352937;
+  --app-hint: #8a7f86;
+  --app-subtitle: #7a6e74;
+  --app-link: #4b5da5;
+  --app-button: #d0352c;
+  --app-button-text: #fff8ec;
+  /* Фирменный красный для текста (даты, акценты): на креме - чуть темнее кнопки, чтобы читался. */
+  --app-brand: #b8302a;
+  --app-accent: #4b5da5;
+  --app-destructive: #b02a22;
+  --app-separator: rgba(53, 41, 55, 0.12);
+  --app-section-header: #7a6e74;
+  --app-fill: rgba(53, 41, 55, 0.07);
+  --app-ok-soft: #e1eedc;
+  --app-warn-soft: #f4e6c6;
+  --app-bad-soft: #f6dcd6;
+  --app-info-soft: #dfe3f3;
+  --app-ok-text: #2f6b3e;
+  --app-warn-text: #835600;
+  --app-bad-text: #a8291f;
+  --app-info-text: #3f4f91;
+  /* Зерно на «бумаге», как на постерах: сливовые крапинки. Карточки остаются чистыми. */
+  --app-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .21 0 0 0 0 .16 0 0 0 0 .22 0.9 0 0 0 -.43'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* Мягкие цветные подложки для иконок-плиток: фон + цвет штриха. */
+  --hue-blue-bg: #dfe3f3;
+  --hue-blue-fg: #4b5da5;
+  --hue-violet-bg: #e8dfe6;
+  --hue-violet-fg: #6b4a6e;
+  --hue-green-bg: #e1eedc;
+  --hue-green-fg: #2f7a45;
+  --hue-orange-bg: #f6dcd6;
+  --hue-orange-fg: #c2382f;
+  --hue-pink-bg: #f6dcd6;
+  --hue-pink-fg: #c2382f;
+  --hue-teal-bg: #dcebe6;
+  --hue-teal-fg: #2b7466;
+  --hue-gray-bg: rgba(53, 41, 55, 0.07);
+  --hue-gray-fg: #7a6e74;
+
+  --safe-top: max(
+    env(safe-area-inset-top, 0px),
+    calc(var(--tg-viewport-safe-area-inset-top, 0px) + var(--tg-viewport-content-safe-area-inset-top, 0px))
+  );
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-viewport-safe-area-inset-bottom, 0px));
+  --safe-left: max(env(safe-area-inset-left, 0px), var(--tg-viewport-safe-area-inset-left, 0px));
+  --safe-right: max(env(safe-area-inset-right, 0px), var(--tg-viewport-safe-area-inset-right, 0px));
+  --app-height: var(--tg-viewport-stable-height, 100vh);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --app-bg: #241b26;
+    --app-section: #352937;
+    --app-text: #ede8d0;
+    --app-hint: #a99ca7;
+    --app-subtitle: #b6aab2;
+    --app-link: #9aa8e6;
+    --app-button: #d0352c;
+    --app-button-text: #fff8ec;
+    --app-brand: #ff7a6e;
+    --app-accent: #9aa8e6;
+    --app-destructive: #ff8a7e;
+    --app-separator: rgba(224, 219, 190, 0.12);
+    --app-section-header: #a99ca7;
+    --app-fill: rgba(224, 219, 190, 0.08);
+    --app-ok-soft: #233a2b;
+    --app-warn-soft: #3d3118;
+    --app-bad-soft: #4a2222;
+    --app-info-soft: #2b2f4e;
+    --app-ok-text: #7fcb95;
+    --app-warn-text: #e8b860;
+    --app-bad-text: #ff8a7e;
+    --app-info-text: #9aa8e6;
+    /* В тёмной теме крапинки кремовые. */
+    --app-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .88 0 0 0 0 .86 0 0 0 0 .75 0.6 0 0 0 -.29'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --hue-blue-bg: rgba(154, 168, 230, 0.16);
+    --hue-blue-fg: #9aa8e6;
+    --hue-violet-bg: rgba(196, 160, 200, 0.16);
+    --hue-violet-fg: #d3b4d6;
+    --hue-green-bg: rgba(127, 203, 149, 0.16);
+    --hue-green-fg: #7fcb95;
+    --hue-orange-bg: rgba(255, 138, 126, 0.16);
+    --hue-orange-fg: #ff8a7e;
+    --hue-pink-bg: rgba(255, 138, 126, 0.16);
+    --hue-pink-fg: #ff8a7e;
+    --hue-teal-bg: rgba(110, 200, 180, 0.16);
+    --hue-teal-fg: #7fd0bd;
+    --hue-gray-bg: rgba(224, 219, 190, 0.08);
+    --hue-gray-fg: #a99ca7;
+  }
+}
+
+/* Telegram сообщает тему явно - она важнее системной. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --app-bg: #241b26;
+  --app-section: #352937;
+  --app-text: #ede8d0;
+  --app-hint: #a99ca7;
+  --app-subtitle: #b6aab2;
+  --app-link: #9aa8e6;
+  --app-button: #d0352c;
+  --app-button-text: #fff8ec;
+  --app-brand: #ff7a6e;
+  --app-accent: #9aa8e6;
+  --app-destructive: #ff8a7e;
+  --app-separator: rgba(224, 219, 190, 0.12);
+  --app-section-header: #a99ca7;
+  --app-fill: rgba(224, 219, 190, 0.08);
+  --app-ok-soft: #233a2b;
+  --app-warn-soft: #3d3118;
+  --app-bad-soft: #4a2222;
+  --app-info-soft: #2b2f4e;
+  --app-ok-text: #7fcb95;
+  --app-warn-text: #e8b860;
+  --app-bad-text: #ff8a7e;
+  --app-info-text: #9aa8e6;
+  /* В тёмной теме крапинки кремовые. */
+  --app-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .88 0 0 0 0 .86 0 0 0 0 .75 0.6 0 0 0 -.29'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --hue-blue-bg: rgba(154, 168, 230, 0.16);
+  --hue-blue-fg: #9aa8e6;
+  --hue-violet-bg: rgba(196, 160, 200, 0.16);
+  --hue-violet-fg: #d3b4d6;
+  --hue-green-bg: rgba(127, 203, 149, 0.16);
+  --hue-green-fg: #7fcb95;
+  --hue-orange-bg: rgba(255, 138, 126, 0.16);
+  --hue-orange-fg: #ff8a7e;
+  --hue-pink-bg: rgba(255, 138, 126, 0.16);
+  --hue-pink-fg: #ff8a7e;
+  --hue-teal-bg: rgba(110, 200, 180, 0.16);
+  --hue-teal-fg: #7fd0bd;
+  --hue-gray-bg: rgba(224, 219, 190, 0.08);
+  --hue-gray-fg: #a99ca7;
+}
+
+@theme inline {
+  --color-page: var(--app-bg);
+  --color-section: var(--app-section);
+  --color-fg: var(--app-text);
+  --color-hint: var(--app-hint);
+  --color-subtle: var(--app-subtitle);
+  --color-link: var(--app-link);
+  --color-btn: var(--app-button);
+  --color-btn-fg: var(--app-button-text);
+  --color-brand: var(--app-brand);
+  --color-accent: var(--app-accent);
+  --color-danger: var(--app-destructive);
+  --color-line: var(--app-separator);
+  --color-head: var(--app-section-header);
+  --color-fill: var(--app-fill);
+  --color-ok-soft: var(--app-ok-soft);
+  --color-warn-soft: var(--app-warn-soft);
+  --color-bad-soft: var(--app-bad-soft);
+  --color-info-soft: var(--app-info-soft);
+  --color-ok-fg: var(--app-ok-text);
+  --color-warn-fg: var(--app-warn-text);
+  --color-bad-fg: var(--app-bad-text);
+  --color-info-fg: var(--app-info-text);
+}
+
+@theme {
+  --color-ok: #1f9d55;
+  --color-warn: #f0a020;
+  --color-bad: #d93a3a;
+  --color-scan-green: #178a45;
+  --color-scan-yellow: #f2b01e;
+  --color-scan-red: #c62828;
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  /* Заголовки - широкий Unbounded, как на постерах. Текст и поля - системный шрифт: так читаемее. */
+  --font-display: 'Unbounded Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --animate-sheet-in: sheet-in 0.22s ease-out;
+  --animate-fade-in: fade-in 0.18s ease-out;
+  --animate-pop-in: pop-in 0.16s ease-out;
+  --animate-error-in: error-in 0.18s ease-out;
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes error-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+@utility pt-safe {
+  padding-top: var(--safe-top);
+}
+@utility pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+@utility min-h-app {
+  min-height: var(--app-height);
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--app-bg);
+    background-image: var(--app-grain);
+    background-size: 180px 180px;
+    color: var(--app-text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+  #root {
+    min-height: var(--app-height);
+  }
+  /* 16px и больше - иначе iOS увеличивает страницу при фокусе. */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  a {
+    color: var(--app-link);
+  }
+  button {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  /* Иконки Tabler: одинаковая толщина линий по всему приложению. */
+  .tabler-icon {
+    flex-shrink: 0;
+    stroke-width: 1.8;
+  }
+}
+
+/* ---------- отзывы и «Конец «Шага веры»»: живой фон, надписи, шаги ---------- */
+@keyframes fb-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--o, 0.5);
+  }
+  88% {
+    opacity: var(--o, 0.5);
+  }
+  100% {
+    transform: translate3d(0, calc(var(--travel, 100vh) * -1), 0) scale(1);
+    opacity: 0;
+  }
+}
+/* Покачивание отдельно от подъёма (свойство translate складывается с transform): подъём ровный, качание мягкое. */
+@keyframes fb-sway {
+  from {
+    translate: calc(var(--dx, 16px) * -1) 0;
+  }
+  to {
+    translate: var(--dx, 16px) 0;
+  }
+}
+@keyframes fb-wave {
+  0%,
+  44%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  14% {
+    transform: translateY(-0.12em) rotate(-4deg);
+  }
+  28% {
+    transform: translateY(0.03em) rotate(2deg);
+  }
+}
+@keyframes fb-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgb(208 53 44 / 0),
+      0 12px 30px -14px rgb(184 48 42 / 0.65);
+  }
+  50% {
+    box-shadow:
+      0 0 0 7px rgb(208 53 44 / 0.16),
+      0 16px 38px -12px rgb(184 48 42 / 0.8);
+  }
+}
+@keyframes fb-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes fb-step {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  55% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fb-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(10px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes fb-heart {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.2);
+  }
+  24% {
+    transform: scale(0.96);
+  }
+  36% {
+    transform: scale(1.1);
+  }
+}
+@keyframes fb-shine {
+  0%,
+  60% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-20deg);
+  }
+}
+
+/* Кто попросил меньше движения - всё стоит, просто красиво. */
+@media (prefers-reduced-motion: no-preference) {
+  .fb-rise {
+    animation:
+      fb-rise var(--dur, 40s) linear var(--delay, 0s) infinite,
+      fb-sway var(--sway, 12s) ease-in-out var(--delay, 0s) infinite alternate;
+  }
+  .fb-wave {
+    display: inline-block;
+    animation: fb-wave 4.2s ease-in-out var(--delay, 0s) infinite;
+  }
+  .fb-breathe {
+    animation: fb-breathe 5s ease-in-out infinite;
+  }
+  .fb-bob {
+    animation: fb-bob 2.8s ease-in-out var(--delay, 0s) infinite;
+  }
+  .fb-step {
+    animation: fb-step var(--cycle, 3.6s) ease-out var(--delay, 0s) infinite both;
+  }
+  .fb-pop {
+    animation: fb-pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) var(--delay, 0s) both;
+  }
+  .fb-heart {
+    animation: fb-heart 3.2s ease-in-out infinite;
+  }
+  .fb-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+    animation: fb-shine 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+/* Плёночное зерно поверх градиентов отзывов и «Конца» - как фон всего приложения, только заметнее. */
+.fb-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  opacity: 0.55;
+  mix-blend-mode: overlay;
+}
+/* Светлая крупка - та же, что у фона приложения в тёмной теме: стиль один. */
+.fb-grain-specks {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .88 0 0 0 0 .86 0 0 0 0 .75 0.6 0 0 0 -.29'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.8;
+}
+@keyframes fb-grain {
+  from {
+    transform: translate3d(-4%, -3%, 0);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0);
+  }
+}
+/* Живой градиент: цвета медленно перетекают (карточка «Оставь отзыв», шапка формы). */
+@keyframes fb-flow {
+  from {
+    background-position: 0% 20%;
+  }
+  to {
+    background-position: 100% 80%;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fb-grain,
+  .fb-grain-specks {
+    animation: fb-grain 26s ease-in-out infinite alternate;
+  }
+  .fb-flow {
+    animation: fb-flow 9s ease-in-out infinite alternate;
+  }
+}

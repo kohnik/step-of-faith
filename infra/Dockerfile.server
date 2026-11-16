@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+# Образ API и бота (один образ, два контейнера: main-api.js и main-bot.js).
+FROM node:24-alpine AS base
+RUN corepack enable
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+WORKDIR /repo
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
+COPY apps/server/package.json apps/server/
+COPY packages/shared/package.json packages/shared/
+COPY apps/miniapp/package.json apps/miniapp/
+COPY apps/admin/package.json apps/admin/
+
+FROM base AS build
+RUN pnpm install --frozen-lockfile --filter @sof/server...
+COPY packages/shared packages/shared
+COPY apps/server apps/server
+RUN pnpm --filter @sof/server build
+
+FROM base AS prod-deps
+RUN pnpm install --frozen-lockfile --prod --filter @sof/server
+
+FROM node:24-alpine AS runtime
+# Шрифты с кириллицей - для картинок билетов (sharp рисует SVG через fontconfig).
+RUN apk add --no-cache fontconfig font-dejavu tini wget
+ENV NODE_ENV=production
+WORKDIR /repo
+COPY --from=prod-deps /repo/node_modules ./node_modules
+COPY --from=prod-deps /repo/apps/server/node_modules ./apps/server/node_modules
+COPY --from=build /repo/apps/server/dist ./apps/server/dist
+COPY apps/server/package.json ./apps/server/package.json
+WORKDIR /repo/apps/server
+# Фото и 3D мерча, чеки за мерч - в томах; папки заранее принадлежат node, иначе новый том был бы только для root.
+RUN mkdir -p /data/media /data/private && chown -R node:node /data
+USER node
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/main-api.js"]
